@@ -10,7 +10,7 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
-        model_size = 128
+        model_size = 32
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(20, model_size),
             nn.ReLU(),
@@ -54,8 +54,6 @@ def test(dataloader, model, loss_fn):
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
-            # print(pred, y, pred.argmax(1), pred.argmax(1) == y)
-
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
@@ -83,13 +81,13 @@ if __name__ == '__main__':
 
     # Create the loss function and the optimizer
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 
     # Train the model
-    num_epochs = 10000
+    num_epochs = 2000
     for epoch in range(num_epochs):
         train_loss = train(train_dataloader, model, loss_fn, optimizer)
-        if epoch % 200 == 0:
+        if epoch % 100 == 0:
             print(f"Epoch {epoch} -------------------------------")
             print(f"[Train] Loss: {train_loss:>7f}")
             test(test_dataloader, model, loss_fn)
