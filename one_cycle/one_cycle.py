@@ -1,6 +1,9 @@
+import numpy as np
 import torch
+from sklearn.metrics import classification_report
 from torch import nn
 from torch.utils.data import DataLoader
+
 import dataset
 
 
@@ -46,33 +49,39 @@ def train(dataloader, model, loss_fn, optimizer):
 
 
 def test(dataloader, model, loss_fn):
-    size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
-    test_loss, correct = 0, 0
+    test_loss = 0
+    all_pred, all_label = [], []
     with torch.no_grad():
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            pred = torch.argmax(pred, dim=1)
+            all_pred += pred.tolist()
+            all_label += y.tolist()
     test_loss /= num_batches
-    correct /= size
-    print(f"[Test ] Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}")
+    print(f'[Test ] Avg loss: {test_loss:>8f}')
+    print(classification_report(all_label, all_pred, target_names=['No risk', 'OSA risk']))
+
+    acc = (np.array(all_label) == np.array(all_pred)).mean()
+    return acc
 
 
 if __name__ == '__main__':
     batch_size = 8
+    root = '/HDD/nia/data'
 
     # Create the dataset for training and testing
-    training_data = dataset.SleepSoundDataset(root="data", train=True)
-    test_data = dataset.SleepSoundDataset(root="data", train=False)
+    training_data = dataset.SleepSoundDataset(root=root, train=True)
+    test_data = dataset.SleepSoundDataset(root=root, train=False)
 
     # Create a DataLoader for the training and test data
     train_dataloader = DataLoader(training_data, batch_size=batch_size)
     test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
-    # Get resources to run the experiment.
+    # Get resources to run the experiment
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
 
@@ -85,10 +94,16 @@ if __name__ == '__main__':
 
     # Train the model
     num_epochs = 2000
+    best_acc = -1.
+    best_epoch = -1.
     for epoch in range(num_epochs):
         train_loss = train(train_dataloader, model, loss_fn, optimizer)
         if epoch % 100 == 0:
             print(f"Epoch {epoch} -------------------------------")
             print(f"[Train] Loss: {train_loss:>7f}")
-            test(test_dataloader, model, loss_fn)
-    print("Done!")
+            acc = test(test_dataloader, model, loss_fn)
+            if acc > best_acc:
+                best_acc = acc
+                best_epoch = epoch
+    print('Done!')
+    print(f'Highest accuracy {best_acc} achieved at epoch {best_epoch}.')
