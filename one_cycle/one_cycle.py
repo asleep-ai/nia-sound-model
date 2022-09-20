@@ -1,11 +1,26 @@
+import random
+
 import numpy as np
 import torch
+import torch.backends.cudnn as cudnn
 from sklearn.metrics import classification_report
 from torch import nn
 from torch.utils.data import DataLoader
 
 import dataset
 
+
+def set_seed(seed):
+    """Set random seeds for random, numpy, torch, and torch.backends.cudnn."""
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    cudnn.deterministic = True
+    cudnn.benchmark = False
+
+def save_model(model, model_path):
+    model_state_dict = model.module.state_dict() if torch.cuda.device_count() > 1 else model.state_dict()
+    torch.save(model_state_dict, model_path)
 
 class NeuralNetwork(nn.Module):
     """Define the neural network model.
@@ -70,6 +85,8 @@ def test(dataloader, model, loss_fn):
 
 
 if __name__ == '__main__':
+    set_seed(seed=0)
+
     batch_size = 8
     root = '/HDD/nia/data'
 
@@ -93,17 +110,18 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
 
     # Train the model
-    num_epochs = 2000
+    num_epochs = 100
     best_acc = -1.
     best_epoch = -1.
     for epoch in range(num_epochs):
         train_loss = train(train_dataloader, model, loss_fn, optimizer)
-        if epoch % 100 == 0:
+        if epoch % 10 == 0:
             print(f"Epoch {epoch} -------------------------------")
             print(f"[Train] Loss: {train_loss:>7f}")
             acc = test(test_dataloader, model, loss_fn)
             if acc > best_acc:
                 best_acc = acc
                 best_epoch = epoch
+                save_model(model, 'best_model.pt')
     print('Done!')
     print(f'Highest accuracy {best_acc} achieved at epoch {best_epoch}.')

@@ -147,3 +147,6 @@ dmypy.json
 
 # Created backup file
 *~
+
+# Pytorch model files
+*.pt
