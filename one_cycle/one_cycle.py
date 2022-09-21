@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     # Create the loss function and the optimizer
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
     # Train the model
     num_epochs = 100

@@ -141,6 +141,7 @@ dmypy.json
 *.npy
 *.tgz
 *.pkl
+*.json
 
 # Swap file
 *.sw?
@@ -150,3 +151,6 @@ dmypy.json
 
 # Pytorch model files
 *.pt
+
+# Figures
+*.png
