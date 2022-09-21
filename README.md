@@ -11,14 +11,9 @@ The data should be split to test and train datasets. The path structure for the 
 ```
 data
   ├─ test
-  │   ├─ sound
-  │   │   └─ npy files
-  │   └─ label
-  │       └─ json files
+  │   ├─ edf data files
+  │   └─ json label files
   └─ train
-      ├─ sound
-      │   └─ npy files
-      └─ label
-          └─ json files
-
+      └─ edf data files
+      └─ json label files
 ```
