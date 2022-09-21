@@ -1,5 +1,6 @@
 import random
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -18,9 +19,22 @@ def set_seed(seed):
     cudnn.deterministic = True
     cudnn.benchmark = False
 
+
 def save_model(model, model_path):
     model_state_dict = model.module.state_dict() if torch.cuda.device_count() > 1 else model.state_dict()
     torch.save(model_state_dict, model_path)
+
+def draw_fig(data, title, y_label):
+    plt.figure()
+    plt.plot(data, c='b')
+    plt.title(title)
+    plt.xlabel('Training epochs')
+    plt.ylabel(y_label)
+    plt.grid(linestyle='--')
+    plt.tight_layout()
+    plt.savefig(title + '.png', dpi=300)
+    plt.close()
+
 
 class NeuralNetwork(nn.Module):
     """Define the neural network model."""
@@ -106,9 +120,15 @@ if __name__ == '__main__':
     # Train the model
     num_epochs = 100
     best_acc = -1.
+    all_train_loss = []
+    all_test_loss = []
+    all_acc = []
     for epoch in range(num_epochs):
         train_loss = train(train_dataloader, model, loss_fn, optimizer)
         acc, test_loss, all_pred, all_label = test(test_dataloader, model, loss_fn)
+        all_train_loss.append(train_loss)
+        all_test_loss.append(test_loss)
+        all_acc.append(acc)
         if epoch % 10 == 0:
             print(f'Epoch {epoch} -------------------------------')
             print(f'[Train] Loss: {train_loss:.4f}')
@@ -126,4 +146,10 @@ if __name__ == '__main__':
     print(f'Highest accuracy {best_acc:.2%} achieved at epoch {best_epoch}:')
     print(classification_report(best_label, best_pred,
                                 target_names=['No risk', 'OSA risk'], zero_division=0))
+
+    print('\nFigure drawing...')
+    draw_fig(np.array(all_acc) * 100, title='Test accuracy', y_label='Accuracy (%)')
+    draw_fig(all_train_loss, title='Training loss', y_label='Loss value')
+    draw_fig(all_test_loss, title='Test loss', y_label='Loss value')
+
     print('Done!')
