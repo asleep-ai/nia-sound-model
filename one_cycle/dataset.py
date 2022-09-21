@@ -76,8 +76,9 @@ class SleepSoundDataset(Dataset):
         return mel_data, label
 
     def data_preprocess(self, mel_data: np.ndarray) -> np.ndarray:
-        mel_data = mel_data.mean(axis=1)
-        return mel_data
+        mean = mel_data.mean(axis=1)
+        std = mel_data.std(axis=1)
+        return np.concatenate((mean, std))
 
 if __name__ == '__main__':
     root = '/HDD/nia/data'
