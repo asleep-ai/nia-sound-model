@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('../one_cycle/')
+sys.path.append('../main/')
 
 from EDF import EDFReader
 
