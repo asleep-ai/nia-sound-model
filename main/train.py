@@ -5,11 +5,12 @@ import numpy as np
 import torch
 from sklearn.metrics import classification_report
 from torch import nn
+from torch.nn.functional import softmax
 from torch.utils.data import DataLoader
 
 from dataset import SleepSoundDataset
 from model import NeuralNetwork
-from utils import set_seed, save_model
+from utils import set_seed, save_model, load_model
 
 
 def draw_fig(data, title, y_label, save_path):
@@ -60,6 +61,22 @@ def inference(dataloader, model, loss_fn):
 
     acc = (np.array(all_label) == np.array(all_pred)).mean()
     return acc, loss, all_pred, all_label
+
+
+def get_prob_list(train_loader, model, prob_file):
+    model.eval()
+    train_osarisk_probs = []
+    with torch.no_grad():
+        for X, _ in train_loader:
+            X = X.to(device)
+            logits = model(X)
+            probs = softmax(logits, dim=1)
+            train_osarisk_probs += probs[:, 1].tolist()  # Probs of having OSA
+
+    train_osarisk_probs = np.array(train_osarisk_probs)
+    np.save(prob_file, train_osarisk_probs)
+
+    return train_osarisk_probs
 
 
 if __name__ == '__main__':
@@ -126,5 +143,12 @@ if __name__ == '__main__':
     draw_fig(np.array(all_valid_acc) * 100, 'Validation accuracy', 'Accuracy (%)', save_path)
     draw_fig(all_train_loss, 'Training loss', 'Loss value', save_path)
     draw_fig(all_valid_loss, 'Validation loss', 'Loss value', save_path)
+
+    # Saving probabilities of having OSA on training set
+    print('\nSaving probabilities of having OSA from training set...')
+    model_pt_file = os.path.join(save_path, 'best_model.pt')
+    load_model(model, model_file=model_pt_file)
+    prob_file = os.path.join(save_path, 'train_osarisk_probs.npy')
+    get_prob_list(train_dataloader, model, prob_file)
 
     print('Done!')

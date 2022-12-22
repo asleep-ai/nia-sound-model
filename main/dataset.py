@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
@@ -17,10 +18,13 @@ class SleepSoundDataset(Dataset):
         return self.len
 
     def __getitem__(self, idx):
-        data = self.data[idx]
-        label = self.labels[idx]
+        x = self.data[idx]
+        y = self.labels[idx]
 
-        return data, label
+        x = torch.from_numpy(x).float()
+        y = torch.tensor(y).long()
+
+        return x, y
 
 
 if __name__ == '__main__':
