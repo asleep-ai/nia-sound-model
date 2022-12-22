@@ -142,6 +142,7 @@ dmypy.json
 *.tgz
 *.pkl
 *.json
+*.csv
 
 # Swap file
 *.sw?
